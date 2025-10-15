@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { MapPin, Upload, X, Save, Loader2, AlertCircle, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
+import { MapPin, Upload, X, Save, Loader2, AlertCircle, Plus, Trash2, Image as ImageIcon, CheckCircle } from 'lucide-react';
 import PlacesAutocomplete from 'react-places-autocomplete';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import { uploadApi, handleApiError } from "@/lib/api";
 
 interface ShopFormData {
@@ -52,6 +53,7 @@ const ShopForm: React.FC<ShopFormProps> = ({
 }) => {
   const [shopPhotoPreview, setShopPhotoPreview] = useState<string | null>(null);
   const [productPhotoPreviews, setProductPhotoPreviews] = useState<string[]>([]);
+  const { toast } = useToast();
 
   // Form validation
   const validateForm = useCallback(() => {
@@ -118,6 +120,13 @@ const ShopForm: React.FC<ShopFormProps> = ({
         setShopPhotoPreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+
+      // Show success toast
+      toast({
+        title: "Photo uploaded successfully! ✅",
+        description: `${file.name} has been added to your shop.`,
+        duration: 3000,
+      });
     }
   }, [setFormData, setErrors]);
 
@@ -341,6 +350,8 @@ const ShopForm: React.FC<ShopFormProps> = ({
       {/* Shop Photo Upload */}
       <div className="space-y-4">
         <Label>Shop Photo</Label>
+
+        {/* Upload Area */}
         <div className="flex items-start gap-4">
           <div className="flex-1">
             <Input
@@ -352,16 +363,34 @@ const ShopForm: React.FC<ShopFormProps> = ({
             />
             <Label
               htmlFor="shop-photo-upload"
-              className="flex items-center justify-center w-full h-32 border-2 border-dashed border-muted-foreground/25 rounded-lg cursor-pointer hover:border-primary/50 transition-colors"
+              className={`flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                shopPhotoPreview
+                  ? 'border-green-300 bg-green-50 hover:border-green-400'
+                  : 'border-muted-foreground/25 hover:border-primary/50'
+              }`}
             >
               <div className="text-center">
-                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Click to upload shop photo
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Max 5MB, JPG/PNG only
-                </p>
+                {shopPhotoPreview ? (
+                  <>
+                    <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                    <p className="text-sm text-green-700 font-medium">
+                      Photo uploaded successfully!
+                    </p>
+                    <p className="text-xs text-green-600">
+                      Click to upload a different photo
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      Click to upload shop photo
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Max 5MB, JPG/PNG only
+                    </p>
+                  </>
+                )}
               </div>
             </Label>
             {errors.shopPhoto && (
@@ -369,6 +398,38 @@ const ShopForm: React.FC<ShopFormProps> = ({
             )}
           </div>
         </div>
+
+        {/* Photo Preview */}
+        {shopPhotoPreview && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Uploaded Photo</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={removeShopPhoto}
+                className="text-destructive hover:text-destructive"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Remove
+              </Button>
+            </div>
+            <div className="relative inline-block">
+              <img
+                src={shopPhotoPreview}
+                alt="Shop preview"
+                className="w-48 h-32 object-cover rounded-lg border-2 border-green-200 shadow-sm"
+              />
+              <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-1">
+                <CheckCircle className="h-4 w-4" />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Your shop photo has been uploaded and will be displayed on your shop listing.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Products Section */}
