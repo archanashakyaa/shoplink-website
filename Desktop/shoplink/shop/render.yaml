@@ -1,0 +1,32 @@
+services:
+  # Backend API Service
+  - type: web
+    name: shoplink-backend
+    runtime: python
+    buildCommand: "pip install -r backend/requirements.txt"
+    startCommand: "cd backend && python app.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.16
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+    healthCheckPath: /api/health
+
+  # Frontend Web Service
+  - type: web
+    name: shoplink-frontend
+    runtime: node
+    buildCommand: "cd frontend && npm install && npm run build"
+    startCommand: "cd frontend && npm run preview"
+    envVars:
+      - key: NODE_VERSION
+        value: 18.18.0
+      - key: VITE_API_URL
+        value: https://shoplink-backend.onrender.com/api
+
+databases:
+  - name: shoplink-db
+    databaseName: shoplink
+    user: shoplink_user
